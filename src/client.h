@@ -17,6 +17,8 @@
 
 #include "shorkwm.h"
 
+#include <X11/Xft/Xft.h>
+
 
 
 // A window's location and size 
@@ -33,8 +35,8 @@ struct Client {
     // Next client in the list (NULL if tail)
     Client *next;
 
-    // Window's snap (usually WM_NAME)
-    char name[256];
+    // Window title (usually =WM_NAME)
+    char title[256];
 
     // Border/decoration window around child
     Window frame;
@@ -48,8 +50,15 @@ struct Client {
     // A saved copy of a previous location/size (used for restoring a snapped
     // window)
     ClientGeometry savedGeo;
+
+    // Xft drawing context for title bar text (when ENABLE_AA=1)
+    XftDraw *xftDraw;
+
+    // Xft font used for title bar text (when ENABLE_AA=1)
+    XftFont *xftFont;
     
-    // Flags if the pointer is currently hovering over the close button
+    // Flags if the pointer is currently hovering over the close button (when
+    // ENABLE_TITLE=1)
     int closeHover;
 
     // Flags if this window has keyboard focus

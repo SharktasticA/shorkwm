@@ -36,7 +36,7 @@ Client *addClient(Window frame, Window child, ClientGeometry startGeo)
     if (!client)
         return NULL;
 
-    client->name[0] = '\0';
+    client->title[0] = '\0';
     client->frame = frame;
     client->child = child;
     client->geo = startGeo;

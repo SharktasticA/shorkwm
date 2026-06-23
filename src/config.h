@@ -42,7 +42,7 @@ extern int CLOSE_BTN_SYM_MAR;
 
 // Enables antialiasing/smoother shapes and text (1=y, 0=n)
 extern int ENABLE_AA;
-// Enables the title bar (1=y, 0=n)
+// Enables window title bars (1=y, 0=n)
 extern int ENABLE_TITLE;
 
 // Snap zone detection corner bias
@@ -56,15 +56,17 @@ extern int SNAP_INDI_BOR_COL;
 // Snap indicator border size
 extern int SNAP_INDI_BOR_SIZE;
 
-// Title bar height
+// Window title bar font name (when ENABLE_AA=1)
+extern char *TITLE_FONT_NAME;
+// Window title bar height
 extern int TITLE_HEIGHT;
-// Title bar background colour when not snapped
+// Window title bar background colour when not snapped
 extern int TITLE_REST_BAK_COL;
-// Title bar text colour when not snapped
+// Window title bar text colour when not snapped
 extern int TITLE_REST_TXT_COL;
-// Title bar background colour when snapped
+// Window title bar background colour when snapped
 extern int TITLE_SNAP_BAK_COL;
-// Title bar text colour when snapped
+// Window title bar text colour when snapped
 extern int TITLE_SNAP_TXT_COL;
 
 #endif

@@ -19,6 +19,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <X11/Xft/Xft.h>
 #include <X11/extensions/Xrender.h>
 
 
@@ -57,10 +58,16 @@ void createFrame(Window child)
     Client *client = addClient(frame, child, (ClientGeometry){ wa.x, wa.y, wa.width, wa.height });
     if (client)
     {
+        if (ENABLE_AA)
+        {
+            client->xftDraw = XftDrawCreate(DPY, client->frame, DefaultVisual(DPY, DefaultScreen(DPY)), DefaultColormap(DPY, DefaultScreen(DPY)));
+            client->xftFont = XftFontOpenName(DPY, DefaultScreen(DPY), TITLE_FONT_NAME);
+        }
+
         char *name = NULL;
         if (XFetchName(DPY, child, &name) && name)
         {
-            snprintf(client->name, sizeof(client->name), "%s", name);
+            snprintf(client->title, sizeof(client->title), "%s", name);
             XFree(name);
         }
 
@@ -104,12 +111,27 @@ void drawTitleBar(Client *client)
 
     // Fill the title bar strip
     XSetForeground(DPY, gc, client->snapped ? TITLE_SNAP_BAK_COL : TITLE_REST_BAK_COL);
-
     XFillRectangle(DPY, client->frame, gc, 0, 0, client->geo.width, TITLE_HEIGHT_ACTUAL);
 
     // Draw Client name
-    XSetForeground(DPY, gc, client->snapped ? TITLE_SNAP_TXT_COL : TITLE_REST_TXT_COL);
-    XDrawString(DPY, client->frame, gc, 4, TITLE_HEIGHT_ACTUAL - 5, client->name, strlen(client->name));
+    if (ENABLE_AA)
+    {
+        XftColor col;
+        XRenderColor xrc = {
+            .red   = ((TITLE_REST_TXT_COL >> 16) & 0xFF) * 257,
+            .green = ((TITLE_REST_TXT_COL >>  8) & 0xFF) * 257,
+            .blue  = ((TITLE_REST_TXT_COL >>  0) & 0xFF) * 257,
+            .alpha = 0xFFFF
+        };
+        XftColorAllocValue(DPY, DefaultVisual(DPY, DefaultScreen(DPY)), DefaultColormap(DPY, DefaultScreen(DPY)), &xrc, &col);
+        XftDrawStringUtf8(client->xftDraw, &col, client->xftFont, 4, TITLE_HEIGHT_ACTUAL - 5, (FcChar8*)client->title, strlen(client->title));
+        XftColorFree(DPY, DefaultVisual(DPY, DefaultScreen(DPY)), DefaultColormap(DPY, DefaultScreen(DPY)), &col);
+    }
+    else
+    {
+        XSetForeground(DPY, gc, client->snapped ? TITLE_SNAP_TXT_COL : TITLE_REST_TXT_COL);
+        XDrawString(DPY, client->frame, gc, 4, TITLE_HEIGHT_ACTUAL - 5, client->title, strlen(client->title));
+    }
 
     // Calc close button position
     int btnX = client->geo.width - CLOSE_BTN_SIZE - CLOSE_BTN_MAR;
@@ -123,13 +145,13 @@ void drawTitleBar(Client *client)
         {
             Picture dest = XRenderCreatePicture(DPY, client->frame, XRenderFindVisualFormat(DPY, DefaultVisual(DPY, DefaultScreen(DPY))), 0, NULL);
             int colToUse = client->closeHover ? CLOSE_BTN_HOV_COL : CLOSE_BTN_BAK_COL;
-            XRenderColor col = {
+            XRenderColor xrc = {
                 .red   = (((colToUse) >> 16) & 0xFF) * 257,
                 .green = ((colToUse >>  8) & 0xFF) * 257,
                 .blue  = ((colToUse >>  0) & 0xFF) * 257,
                 .alpha = 0xFFFF
             };
-            Picture src = XRenderCreateSolidFill(DPY, &col);
+            Picture src = XRenderCreateSolidFill(DPY, &xrc);
 
             // Draw a circle as a 32-point polygon
             int n = 32;

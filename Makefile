@@ -3,9 +3,8 @@ AR ?= ar
 RANLIB ?= ranlib
 STRIP ?= strip
 
-CFLAGS += -I. -Wall -Wextra
-#LDFLAGS += -static -lX11 -lXrender
-LDFLAGS += -lm -lX11 -lXrender
+CFLAGS += -I. -Wall -Wextra -I/usr/include/freetype2
+LDFLAGS += -lm -lX11 -lXrender -lXft -lfontconfig -lfreetype
 
 SRC = src/*.c
 

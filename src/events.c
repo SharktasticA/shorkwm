@@ -229,7 +229,7 @@ void onPropertyNotify(XPropertyEvent *ev)
     char *name = NULL;
     if (XFetchName(DPY, client->child, &name) && name)
     {
-        snprintf(client->name, sizeof(client->name), "%s", name);
+        snprintf(client->title, sizeof(client->title), "%s", name);
         XFree(name);
     }
 
