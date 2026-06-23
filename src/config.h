@@ -58,9 +58,13 @@ extern int SNAP_INDI_BOR_SIZE;
 
 // Title bar height
 extern int TITLE_HEIGHT;
-// Title bar background colour
-extern int TITLE_BAK_COL;
-// Title bar text colour
-extern int TITLE_TXT_COL;
+// Title bar background colour when not snapped
+extern int TITLE_REST_BAK_COL;
+// Title bar text colour when not snapped
+extern int TITLE_REST_TXT_COL;
+// Title bar background colour when snapped
+extern int TITLE_SNAP_BAK_COL;
+// Title bar text colour when snapped
+extern int TITLE_SNAP_TXT_COL;
 
 #endif

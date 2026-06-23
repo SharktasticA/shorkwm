@@ -103,11 +103,12 @@ void drawTitleBar(Client *client)
     GC gc = XCreateGC(DPY, client->frame, 0, NULL);
 
     // Fill the title bar strip
-    XSetForeground(DPY, gc, TITLE_BAK_COL);
+    XSetForeground(DPY, gc, client->snapped ? TITLE_SNAP_BAK_COL : TITLE_REST_BAK_COL);
+
     XFillRectangle(DPY, client->frame, gc, 0, 0, client->geo.width, TITLE_HEIGHT_ACTUAL);
 
     // Draw Client name
-    XSetForeground(DPY, gc, TITLE_TXT_COL);
+    XSetForeground(DPY, gc, client->snapped ? TITLE_SNAP_TXT_COL : TITLE_REST_TXT_COL);
     XDrawString(DPY, client->frame, gc, 4, TITLE_HEIGHT_ACTUAL - 5, client->name, strlen(client->name));
 
     // Calc close button position
