@@ -37,14 +37,14 @@ void applySnap(Client *client, SnapZone zone)
     }
 
     // Get and set new location and dimensions
-    ClientGeometry newProps = getSnapGeometry(zone);
-    XMoveResizeWindow(DPY, client->frame, newProps.x, newProps.y, newProps.width, newProps.height + TITLE_HEIGHT_ACTUAL);
+    ClientGeometry newProps = getSnapGeometry(zone, BOR_SIZE);
+    XMoveResizeWindow(DPY, client->frame, newProps.x, newProps.y, newProps.width, newProps.height);
     XMoveResizeWindow(DPY, client->child, 0, TITLE_HEIGHT_ACTUAL, newProps.width, newProps.height);
     client->geo = newProps;
     client->snapped = 1;
 
     // Update border to snap colour
-    XSetWindowBorder(DPY, client->frame, SNAP_COL);
+    XSetWindowBorder(DPY, client->frame, BOR_SNAP_COL);
 }
 
 /**
@@ -62,10 +62,10 @@ void createSnapIndicator(SnapZone zone)
         return;
 
     // Get potential snap location and dimensions
-    ClientGeometry newProps = getSnapGeometry(zone);
+    ClientGeometry newProps = getSnapGeometry(zone, SNAP_INDI_BOR_SIZE);
 
     // Create a simple window at the potential snap zone
-    snapIndicator = XCreateSimpleWindow(DPY, ROOT, newProps.x, newProps.y, newProps.width, newProps.height,  0, 0, 0);
+    snapIndicator = XCreateSimpleWindow(DPY, ROOT, newProps.x, newProps.y, newProps.width, newProps.height, 0, 0, 0);
 
     // Don't let the WM manage it
     XSetWindowAttributes attr;
@@ -75,7 +75,7 @@ void createSnapIndicator(SnapZone zone)
     attr.background_pixel = SNAP_INDI_BAK_COL;
     attr.border_pixel = SNAP_INDI_BOR_COL;
     XChangeWindowAttributes(DPY, snapIndicator, CWOverrideRedirect | CWBackPixel | CWBorderPixel, &attr);
-    XSetWindowBorderWidth(DPY, snapIndicator, 3);
+    XSetWindowBorderWidth(DPY, snapIndicator, SNAP_INDI_BOR_SIZE);
 
     // Stack it below the held window so it doesn't cover it
     XLowerWindow(DPY, snapIndicator);
@@ -99,15 +99,16 @@ void delSnapIndicator(void)
 /**
  * Calculates the window location and size for the given snap zone.
  * @param zone Target snap zone
+ * @param borderSize Border size to use in calculations
  * @return Initialised ClientGeometry struct containing new window location and
  *         size values
  */
-ClientGeometry getSnapGeometry(SnapZone zone)
+ClientGeometry getSnapGeometry(SnapZone zone, int borderSize)
 {
     ClientGeometry geo = {0};
     int hw = SCREEN_W / 2;
     int hh = SCREEN_H / 2;
-    int b2 = BOR_SIZE * 2;
+    int b2 = borderSize * 2;
 
     switch (zone)
     {
@@ -177,34 +178,34 @@ SnapZone getSnapZone(int cX, int cY)
     int atNorth = 0, atSouth = 0, atWest = 0, atEast = 0;
 
     // Checks for corner zones are biased to make them easier to access
-    if (cY <= (SNAP_THRES * SNAP_CORNER_BIAS) && cX <= (SNAP_THRES * SNAP_CORNER_BIAS))
+    if (cY <= (SNAP_DET_THRES * SNAP_DET_CORNER_BIAS) && cX <= (SNAP_DET_THRES * SNAP_DET_CORNER_BIAS))
     {
         atNorth = 1;
         atWest = 1;
     }
-    else if (cY <= (SNAP_THRES * SNAP_CORNER_BIAS) && cX >= SCREEN_W - (SNAP_THRES * SNAP_CORNER_BIAS))
+    else if (cY <= (SNAP_DET_THRES * SNAP_DET_CORNER_BIAS) && cX >= SCREEN_W - (SNAP_DET_THRES * SNAP_DET_CORNER_BIAS))
     {
         atNorth = 1;
         atEast = 1;
     }
-    else if (cY >= SCREEN_H - (SNAP_THRES * SNAP_CORNER_BIAS) && cX <= (SNAP_THRES * SNAP_CORNER_BIAS))
+    else if (cY >= SCREEN_H - (SNAP_DET_THRES * SNAP_DET_CORNER_BIAS) && cX <= (SNAP_DET_THRES * SNAP_DET_CORNER_BIAS))
     {
         atSouth = 1;
         atWest = 1;
     }
-    else if (cY >= SCREEN_H - (SNAP_THRES * SNAP_CORNER_BIAS) && cX >= SCREEN_W - (SNAP_THRES * SNAP_CORNER_BIAS))
+    else if (cY >= SCREEN_H - (SNAP_DET_THRES * SNAP_DET_CORNER_BIAS) && cX >= SCREEN_W - (SNAP_DET_THRES * SNAP_DET_CORNER_BIAS))
     {
         atSouth = 1;
         atEast = 1;
     }
     // No bias for the simple directions
-    else if (cX <= SNAP_THRES)
+    else if (cX <= SNAP_DET_THRES)
         atWest = 1;
-    else if (cY <= SNAP_THRES)
+    else if (cY <= SNAP_DET_THRES)
         atNorth = 1;
-    else if (cX >= SCREEN_W - SNAP_THRES)
+    else if (cX >= SCREEN_W - SNAP_DET_THRES)
         atEast = 1;
-    else if (cY >= SCREEN_H - SNAP_THRES)
+    else if (cY >= SCREEN_H - SNAP_DET_THRES)
         atSouth = 1;
 
     if (atNorth && atWest)
@@ -249,5 +250,5 @@ void restorePreSnap(Client *client, int newX, int newY)
     client->snapped = 0;
 
     // Revert to normal border colour
-    XSetWindowBorder(DPY, client->frame, BOR_COL);
+    XSetWindowBorder(DPY, client->frame, BOR_REST_COL);
 }

@@ -111,7 +111,7 @@ void onButtonRelease(XButtonEvent *ev)
             applySnap(client, zone);
     }
     else
-        XSetWindowBorder(DPY, dragFrame, BOR_COL);
+        XSetWindowBorder(DPY, dragFrame, BOR_REST_COL);
 
     // Release pointer and clear the saved dragged frame
     XUngrabPointer(DPY, CurrentTime);
@@ -206,7 +206,7 @@ void onMotionNotify(XMotionEvent *ev)
     {
         dragPreview = zone;
         createSnapIndicator(zone);
-        XSetWindowBorder(DPY, dragFrame, (zone != NONE) ? SNAP_COL : BOR_COL);
+        XSetWindowBorder(DPY, dragFrame, (zone != NONE) ? BOR_SNAP_COL : BOR_REST_COL);
     }
 }
 

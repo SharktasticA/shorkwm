@@ -42,7 +42,7 @@ void createFrame(Window child)
         return;
 
     // Create the frame and tell it what events should be delivered to it
-    Window frame = XCreateSimpleWindow(DPY, ROOT, wa.x, wa.y, wa.width, wa.height + TITLE_HEIGHT_ACTUAL, BOR_SIZE, BOR_COL, BAK_COL);
+    Window frame = XCreateSimpleWindow(DPY, ROOT, wa.x, wa.y, wa.width, wa.height + TITLE_HEIGHT_ACTUAL, BOR_SIZE, BOR_REST_COL, BAK_COL);
     XSelectInput(DPY, frame, ButtonPressMask | ButtonReleaseMask | PointerMotionMask | SubstructureNotifyMask | ExposureMask);
 
     XAddToSaveSet(DPY, child);

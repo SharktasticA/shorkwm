@@ -15,10 +15,15 @@
 #ifndef CONFIG
 #define CONFIG
 
+// Generic background colour
 extern int BAK_COL;
 
+// Window border size
 extern int BOR_SIZE;
-extern int BOR_COL;
+// Window border colour when not snapped
+extern int BOR_REST_COL;
+// Window border colour when snapped
+extern int BOR_SNAP_COL;
 
 // Close button background colour
 extern int CLOSE_BTN_BAK_COL;
@@ -31,13 +36,18 @@ extern int CLOSE_BTN_SIZE;
 // Close button symbol colour
 extern int CLOSE_BTN_SYM_COL;
 
-extern int SNAP_COL;
-extern int SNAP_CORNER_BIAS;
+// Snap zone detection corner bias
+extern int SNAP_DET_CORNER_BIAS;
+// Snap zone detection threshold
+extern int SNAP_DET_THRES;
+// Snap indicator background colour
 extern int SNAP_INDI_BAK_COL;
+// Snap indiactor border colour
 extern int SNAP_INDI_BOR_COL;
-extern int SNAP_THRES;
+// Snap indicator border size
+extern int SNAP_INDI_BOR_SIZE;
 
-// Title bar height in pixels
+// Title bar height
 extern int TITLE_HEIGHT;
 // Title bar background colour
 extern int TITLE_BAK_COL;

@@ -44,7 +44,7 @@ extern Window snapIndicator;
 void applySnap(Client*, SnapZone);
 void createSnapIndicator(SnapZone);
 void delSnapIndicator(void);
-ClientGeometry getSnapGeometry(SnapZone);
+ClientGeometry getSnapGeometry(SnapZone, int);
 SnapZone getSnapZone(int, int);
 void restorePreSnap(Client*, int, int);
 
