@@ -4,8 +4,8 @@ RANLIB ?= ranlib
 STRIP ?= strip
 
 CFLAGS += -I. -Wall -Wextra
-#LDFLAGS += -static -lX11
-LDFLAGS += -lX11
+#LDFLAGS += -static -lX11 -lXrender
+LDFLAGS += -lm -lX11 -lXrender
 
 SRC = src/*.c
 

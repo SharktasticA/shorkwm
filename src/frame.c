@@ -16,8 +16,10 @@
 #include "config.h"
 #include "frame.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <X11/extensions/Xrender.h>
 
 
 
@@ -85,7 +87,7 @@ void deleteFrame(Window child)
  */
 void drawTitleBar(Client *client)
 {
-    if (!TITLE_ENABLED)
+    if (!ENABLE_TITLE || TITLE_HEIGHT_ACTUAL == 0)
         return;
 
     // Create a temporary GC for drawing
@@ -100,17 +102,64 @@ void drawTitleBar(Client *client)
     XDrawString(DPY, client->frame, gc, 4, TITLE_HEIGHT_ACTUAL - 5, client->name, strlen(client->name));
 
     // Calc close button position
-    int btnX = client->geo.width - CLOSE_BTN_SIZE - CLOSE_BTN_PAD;
-    int btnY = (TITLE_HEIGHT_ACTUAL - CLOSE_BTN_SIZE) / 2;
+    int btnX = client->geo.width - CLOSE_BTN_SIZE - CLOSE_BTN_MAR;
+    int btnY = (TITLE_HEIGHT_ACTUAL - CLOSE_BTN_SIZE - 1) / 2;
 
     // Fill close button background
-    XSetForeground(DPY, gc, client->closeHover ? CLOSE_BTN_HOV_COL : CLOSE_BTN_BAK_COL);
-    XFillRectangle(DPY, client->frame, gc, btnX, btnY, CLOSE_BTN_SIZE, CLOSE_BTN_SIZE);
+    if (CLOSE_BTN_RND)
+    {
+        // Smooth circular button
+        if (ENABLE_AA)
+        {
+            Picture dest = XRenderCreatePicture(DPY, client->frame, XRenderFindVisualFormat(DPY, DefaultVisual(DPY, DefaultScreen(DPY))), 0, NULL);
+            int colToUse = client->closeHover ? CLOSE_BTN_HOV_COL : CLOSE_BTN_BAK_COL;
+            XRenderColor col = {
+                .red   = (((colToUse) >> 16) & 0xFF) * 257,
+                .green = ((colToUse >>  8) & 0xFF) * 257,
+                .blue  = ((colToUse >>  0) & 0xFF) * 257,
+                .alpha = 0xFFFF
+            };
+            Picture src = XRenderCreateSolidFill(DPY, &col);
 
-    // Draw the "X" close symbol
+            // Draw a circle as a 32-point polygon
+            int n = 32;
+            double cX = btnX + CLOSE_BTN_SIZE / 2.0;
+            double cY = btnY + CLOSE_BTN_SIZE / 2.0;
+            double r = CLOSE_BTN_SIZE / 2.0;
+            XPointDouble points[32];
+            for (int i = 0; i < n; i++)
+            {
+                double angle = 2.0 * M_PI * i / n;
+                points[i].x = cX + r * cos(angle);
+                points[i].y = cY + r * sin(angle);
+            }
+
+            XRenderCompositeDoublePoly(DPY, PictOpOver, src, dest, XRenderFindStandardFormat(DPY, PictStandardA8), 0, 0, 0, 0, points, n, WindingRule);
+            XRenderFreePicture(DPY, src);
+            XRenderFreePicture(DPY, dest);
+        }
+        // Jagged but quicker circular button
+        else
+        {
+            XSetForeground(DPY, gc, client->closeHover ? CLOSE_BTN_HOV_COL : CLOSE_BTN_BAK_COL);
+            XFillArc(DPY, client->frame, gc, btnX, btnY, CLOSE_BTN_SIZE, CLOSE_BTN_SIZE, 0, 360 * 64);
+        }
+    }
+    // Rectangular button
+    else
+    {
+        XSetForeground(DPY, gc, client->closeHover ? CLOSE_BTN_HOV_COL : CLOSE_BTN_BAK_COL);
+        XFillRectangle(DPY, client->frame, gc, btnX, btnY, CLOSE_BTN_SIZE, CLOSE_BTN_SIZE);
+    }
+
+    // "X" symbol
+    int symX1 = btnX + CLOSE_BTN_SYM_MAR;
+    int symY1 = btnY + CLOSE_BTN_SYM_MAR;
+    int symX2 = btnX + CLOSE_BTN_SIZE - CLOSE_BTN_SYM_MAR - (ENABLE_AA || !CLOSE_BTN_RND ? 1 : 0);
+    int symY2 = btnY + CLOSE_BTN_SIZE - CLOSE_BTN_SYM_MAR - (ENABLE_AA || !CLOSE_BTN_RND ? 1 : 0);
     XSetForeground(DPY, gc, CLOSE_BTN_SYM_COL);
-    XDrawLine(DPY, client->frame, gc, btnX + 3, btnY + 3, btnX + CLOSE_BTN_SIZE - 3, btnY + CLOSE_BTN_SIZE - 3);
-    XDrawLine(DPY, client->frame, gc, btnX + CLOSE_BTN_SIZE - 3, btnY + 3, btnX + 3, btnY + CLOSE_BTN_SIZE - 3);
+    XDrawLine(DPY, client->frame, gc, symX1, symY1, symX2, symY2);
+    XDrawLine(DPY, client->frame, gc, symX2, symY1, symX1, symY2);
 
     XFreeGC(DPY, gc);
 }
@@ -125,9 +174,12 @@ void drawTitleBar(Client *client)
  */
 int isOverCloseButton(int frameLocalX, int frameLocalY, int frameWidth)
 {
+    if (!ENABLE_TITLE || TITLE_HEIGHT_ACTUAL == 0)
+        return 0;
+
     // Mirrors where the button was actually placed by drawTitleBar
-    int btnX = frameWidth - CLOSE_BTN_SIZE - CLOSE_BTN_PAD;
-    int btnY = ((TITLE_ENABLED ? TITLE_HEIGHT : 0) - CLOSE_BTN_SIZE) / 2;
+    int btnX = frameWidth - CLOSE_BTN_SIZE - CLOSE_BTN_MAR;
+    int btnY = (TITLE_HEIGHT_ACTUAL - CLOSE_BTN_SIZE - 1) / 2;
 
     return (frameLocalX >= btnX && frameLocalX <= btnX + CLOSE_BTN_SIZE && frameLocalY >= btnY && frameLocalY <= btnY + CLOSE_BTN_SIZE);
 }

@@ -10,6 +10,6 @@ until DISPLAY=:1 xdpyinfo >/dev/null 2>&1; do
 done
 DISPLAY=:1 ./shorkwm &
 sleep 0.3
-DISPLAY=:1 xterm &
 DISPLAY=:1 galculator &
+DISPLAY=:1 xterm &
 wait

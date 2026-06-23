@@ -27,7 +27,7 @@ extern Window ROOT;
 extern int SCREEN_W;
 // Screen's height in px
 extern int SCREEN_H;
-// Title bar height to use (can be 0 if TITLE_ENABLED=0)
+// Title bar height to use (can be 0 if ENABLE_TITLE=0)
 extern int TITLE_HEIGHT_ACTUAL;
 
 #endif

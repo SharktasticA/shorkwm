@@ -45,7 +45,7 @@ void onButtonPress(XButtonEvent *ev)
         return;
 
     // Check if the click landed on the close button
-    if (TITLE_ENABLED && isOverCloseButton(ev->x, ev->y, client->geo.width))
+    if (ENABLE_TITLE && isOverCloseButton(ev->x, ev->y, client->geo.width))
     {
         // "Ask" program to close
         Atom wmDelete = XInternAtom(DPY, "WM_DELETE_WINDOW", False);
@@ -178,7 +178,7 @@ void onMotionNotify(XMotionEvent *ev)
 {
     if (dragFrame == None)
     {
-        if (TITLE_ENABLED)
+        if (ENABLE_TITLE)
         {
             Client *client = findClientByFrame(ev->window);
             if (client)

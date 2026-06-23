@@ -18,23 +18,32 @@
 // Generic background colour
 extern int BAK_COL;
 
-// Window border size
-extern int BOR_SIZE;
 // Window border colour when not snapped
 extern int BOR_REST_COL;
 // Window border colour when snapped
 extern int BOR_SNAP_COL;
+// Window border size
+extern int BOR_SIZE;
 
 // Close button background colour
 extern int CLOSE_BTN_BAK_COL;
 // Close button hover colour
 extern int CLOSE_BTN_HOV_COL;
-// Close button padding
-extern int CLOSE_BTN_PAD;
+// Close button margin from right
+extern int CLOSE_BTN_MAR;
+// Close button rounded flag (1=rectangle, 0=circle)
+extern int CLOSE_BTN_RND;
 // Close button width/height
 extern int CLOSE_BTN_SIZE; 
 // Close button symbol colour
 extern int CLOSE_BTN_SYM_COL;
+// Close button symbol margin from left
+extern int CLOSE_BTN_SYM_MAR;
+
+// Enables antialiasing/smoother shapes and text (1=y, 0=n)
+extern int ENABLE_AA;
+// Enables the title bar (1=y, 0=n)
+extern int ENABLE_TITLE;
 
 // Snap zone detection corner bias
 extern int SNAP_DET_CORNER_BIAS;
@@ -51,8 +60,6 @@ extern int SNAP_INDI_BOR_SIZE;
 extern int TITLE_HEIGHT;
 // Title bar background colour
 extern int TITLE_BAK_COL;
-// Title bar enabled (1=y, 0=n)
-extern int TITLE_ENABLED;
 // Title bar text colour
 extern int TITLE_TXT_COL;
 
