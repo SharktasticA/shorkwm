@@ -80,6 +80,10 @@ int main(int argc, char *argv[])
     SCREEN_H = DisplayHeight(DPY, scr);
     fprintf(stderr, "Display: %s (%dx%d)\n", DisplayString(DPY), SCREEN_W, SCREEN_H);
 
+    // If TITLE_ENABLED is not a valid boolean, default to enabled
+    if (TITLE_ENABLED != 0 && TITLE_ENABLED != 1)
+        TITLE_ENABLED = 1;
+
     TITLE_HEIGHT_ACTUAL = TITLE_ENABLED ? TITLE_HEIGHT : 0;
 
     XSetErrorHandler(onXError);
