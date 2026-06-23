@@ -34,7 +34,7 @@ void createFrame(Window child)
 
     // Get child's attributions so we can create a frame based on them
     XWindowAttributes wa;
-    if (!XGetWindowAttributes(dpy, child, &wa))
+    if (!XGetWindowAttributes(DPY, child, &wa))
         return;
 
     // override_redirect windows are self-managed, so leave if one of them
@@ -42,14 +42,14 @@ void createFrame(Window child)
         return;
 
     // Create the frame and tell it what events should be delivered to it
-    Window frame = XCreateSimpleWindow(dpy, root, wa.x, wa.y, wa.width, wa.height + TITLE_HEIGHT, BOR_SIZE, BOR_COL, BAK_COL);
-    XSelectInput(dpy, frame, ButtonPressMask | ButtonReleaseMask | PointerMotionMask | SubstructureNotifyMask | ExposureMask);
+    Window frame = XCreateSimpleWindow(DPY, ROOT, wa.x, wa.y, wa.width, wa.height + TITLE_HEIGHT_ACTUAL, BOR_SIZE, BOR_COL, BAK_COL);
+    XSelectInput(DPY, frame, ButtonPressMask | ButtonReleaseMask | PointerMotionMask | SubstructureNotifyMask | ExposureMask);
 
-    XAddToSaveSet(dpy, child);
-    XReparentWindow(dpy, child, frame, 0, TITLE_HEIGHT);
-    XSelectInput(dpy, child, PropertyChangeMask);
-    XMapWindow(dpy, frame);
-    XMapWindow(dpy, child);
+    XAddToSaveSet(DPY, child);
+    XReparentWindow(DPY, child, frame, 0, TITLE_HEIGHT_ACTUAL);
+    XSelectInput(DPY, child, PropertyChangeMask);
+    XMapWindow(DPY, frame);
+    XMapWindow(DPY, child);
 
     // Draw the initial title bar
     Client *client = addClient(frame, child, (ClientGeometry){ wa.x, wa.y, wa.width, wa.height });
@@ -70,10 +70,10 @@ void deleteFrame(Window child)
     if (!client)
         return;
 
-    XUnmapWindow(dpy, client->frame);
-    XReparentWindow(dpy, child, root, 0, 0);
-    XRemoveFromSaveSet(dpy, child);
-    XDestroyWindow(dpy, client->frame);
+    XUnmapWindow(DPY, client->frame);
+    XReparentWindow(DPY, child, ROOT, 0, 0);
+    XRemoveFromSaveSet(DPY, child);
+    XDestroyWindow(DPY, client->frame);
 
     removeClient(child);
     fprintf(stderr, "Unframe: 0x%lx\n", child);
@@ -85,31 +85,34 @@ void deleteFrame(Window child)
  */
 void drawTitleBar(Client *client)
 {
+    if (!TITLE_ENABLED)
+        return;
+
     // Create a temporary GC for drawing
-    GC gc = XCreateGC(dpy, client->frame, 0, NULL);
+    GC gc = XCreateGC(DPY, client->frame, 0, NULL);
 
     // Fill the title bar strip
-    XSetForeground(dpy, gc, TITLE_BAK_COL);
-    XFillRectangle(dpy, client->frame, gc, 0, 0, client->geo.width, TITLE_HEIGHT);
+    XSetForeground(DPY, gc, TITLE_BAK_COL);
+    XFillRectangle(DPY, client->frame, gc, 0, 0, client->geo.width, TITLE_HEIGHT_ACTUAL);
 
     // Draw Client name
-    XSetForeground(dpy, gc, TITLE_TXT_COL);
-    XDrawString(dpy, client->frame, gc, 4, TITLE_HEIGHT - 5, client->name, strlen(client->name));
+    XSetForeground(DPY, gc, TITLE_TXT_COL);
+    XDrawString(DPY, client->frame, gc, 4, TITLE_HEIGHT_ACTUAL - 5, client->name, strlen(client->name));
 
     // Calc close button position
     int btnX = client->geo.width - CLOSE_BTN_SIZE - CLOSE_BTN_PAD;
-    int btnY = (TITLE_HEIGHT - CLOSE_BTN_SIZE) / 2;
+    int btnY = (TITLE_HEIGHT_ACTUAL - CLOSE_BTN_SIZE) / 2;
 
     // Fill close button background
-    XSetForeground(dpy, gc, client->closeHover ? CLOSE_BTN_HOV_COL : CLOSE_BTN_BAK_COL);
-    XFillRectangle(dpy, client->frame, gc, btnX, btnY, CLOSE_BTN_SIZE, CLOSE_BTN_SIZE);
+    XSetForeground(DPY, gc, client->closeHover ? CLOSE_BTN_HOV_COL : CLOSE_BTN_BAK_COL);
+    XFillRectangle(DPY, client->frame, gc, btnX, btnY, CLOSE_BTN_SIZE, CLOSE_BTN_SIZE);
 
     // Draw the "X" close symbol
-    XSetForeground(dpy, gc, CLOSE_BTN_SYM_COL);
-    XDrawLine(dpy, client->frame, gc, btnX + 3, btnY + 3, btnX + CLOSE_BTN_SIZE - 3, btnY + CLOSE_BTN_SIZE - 3);
-    XDrawLine(dpy, client->frame, gc, btnX + CLOSE_BTN_SIZE - 3, btnY + 3, btnX + 3, btnY + CLOSE_BTN_SIZE - 3);
+    XSetForeground(DPY, gc, CLOSE_BTN_SYM_COL);
+    XDrawLine(DPY, client->frame, gc, btnX + 3, btnY + 3, btnX + CLOSE_BTN_SIZE - 3, btnY + CLOSE_BTN_SIZE - 3);
+    XDrawLine(DPY, client->frame, gc, btnX + CLOSE_BTN_SIZE - 3, btnY + 3, btnX + 3, btnY + CLOSE_BTN_SIZE - 3);
 
-    XFreeGC(dpy, gc);
+    XFreeGC(DPY, gc);
 }
 
 /**
@@ -124,7 +127,7 @@ int isOverCloseButton(int frameLocalX, int frameLocalY, int frameWidth)
 {
     // Mirrors where the button was actually placed by drawTitleBar
     int btnX = frameWidth - CLOSE_BTN_SIZE - CLOSE_BTN_PAD;
-    int btnY = (TITLE_HEIGHT - CLOSE_BTN_SIZE) / 2;
+    int btnY = ((TITLE_ENABLED ? TITLE_HEIGHT : 0) - CLOSE_BTN_SIZE) / 2;
 
     return (frameLocalX >= btnX && frameLocalX <= btnX + CLOSE_BTN_SIZE && frameLocalY >= btnY && frameLocalY <= btnY + CLOSE_BTN_SIZE);
 }

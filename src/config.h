@@ -41,6 +41,8 @@ extern int SNAP_THRES;
 extern int TITLE_HEIGHT;
 // Title bar background colour
 extern int TITLE_BAK_COL;
+// Title bar enabled (1=y, 0=n)
+extern int TITLE_ENABLED;
 // Title bar text colour
 extern int TITLE_TXT_COL;
 

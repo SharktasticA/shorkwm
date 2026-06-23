@@ -20,12 +20,14 @@
 
 
 // Connection to the X server
-extern Display *dpy;
+extern Display *DPY;
 // Root window
-extern Window root;
+extern Window ROOT;
 // Screen's width in px
-extern int screenW;
+extern int SCREEN_W;
 // Screen's height in px
-extern int screenH;
+extern int SCREEN_H;
+// Title bar height to use (can be 0 if TITLE_ENABLED=0)
+extern int TITLE_HEIGHT_ACTUAL;
 
 #endif

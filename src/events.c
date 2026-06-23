@@ -45,11 +45,11 @@ void onButtonPress(XButtonEvent *ev)
         return;
 
     // Check if the click landed on the close button
-    if (isOverCloseButton(ev->x, ev->y, client->geo.width))
+    if (TITLE_ENABLED && isOverCloseButton(ev->x, ev->y, client->geo.width))
     {
         // "Ask" program to close
-        Atom wmDelete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
-        Atom wmProto = XInternAtom(dpy, "WM_PROTOCOLS", False);
+        Atom wmDelete = XInternAtom(DPY, "WM_DELETE_WINDOW", False);
+        Atom wmProto = XInternAtom(DPY, "WM_PROTOCOLS", False);
 
         XEvent closeEv;
         closeEv.xclient.type = ClientMessage;
@@ -58,13 +58,13 @@ void onButtonPress(XButtonEvent *ev)
         closeEv.xclient.format = 32;
         closeEv.xclient.data.l[0] = wmDelete;
         closeEv.xclient.data.l[1] = CurrentTime;
-        XSendEvent(dpy, client->child, False, NoEventMask, &closeEv);
+        XSendEvent(DPY, client->child, False, NoEventMask, &closeEv);
 
         return;
     }
 
     // Bring frame to top
-    XRaiseWindow(dpy, client->frame);
+    XRaiseWindow(DPY, client->frame);
 
     // If client is snapped, time to unsnap!
     if (client->snapped)
@@ -79,14 +79,14 @@ void onButtonPress(XButtonEvent *ev)
     // Record where the frame was so pointer delter is applied to a fixed
     // origin rather than accumulating smol increments
     XWindowAttributes wa;
-    XGetWindowAttributes(dpy, client->frame, &wa);
+    XGetWindowAttributes(DPY, client->frame, &wa);
     dragStartX = wa.x;
     dragStartY = wa.y;
     dragPreview = NONE;
 
     // Grab the pointer so all subsequent PointerMotion and ButtonRelease
     // events are delivered to this frame
-    XGrabPointer(dpy, client->frame, False, PointerMotionMask | ButtonReleaseMask, GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
+    XGrabPointer(DPY, client->frame, False, PointerMotionMask | ButtonReleaseMask, GrabModeAsync, GrabModeAsync, None, None, CurrentTime);
 }
 
 /**
@@ -111,10 +111,10 @@ void onButtonRelease(XButtonEvent *ev)
             applySnap(client, zone);
     }
     else
-        XSetWindowBorder(dpy, dragFrame, BOR_COL);
+        XSetWindowBorder(DPY, dragFrame, BOR_COL);
 
     // Release pointer and clear the saved dragged frame
-    XUngrabPointer(dpy, CurrentTime);
+    XUngrabPointer(DPY, CurrentTime);
     dragFrame = None;
     dragPreview = NONE;
 }
@@ -138,9 +138,9 @@ void onConfigureRequest(XConfigureRequestEvent *ev)
     // If this is one of our Clients, we also need to update the frame window
     Client *client = findClientByChild(ev->window);
     if (client)
-        XConfigureWindow(dpy, client->frame, ev->value_mask, &wc);
+        XConfigureWindow(DPY, client->frame, ev->value_mask, &wc);
 
-    XConfigureWindow(dpy, ev->window, ev->value_mask, &wc);
+    XConfigureWindow(DPY, ev->window, ev->value_mask, &wc);
 }
 
 /**
@@ -166,7 +166,7 @@ void onExpose(XExposeEvent *ev)
 void onMapRequest(XMapRequestEvent *ev)
 {
     createFrame(ev->window);
-    XMapWindow(dpy, ev->window);
+    XMapWindow(DPY, ev->window);
 }
 
 /**
@@ -178,15 +178,18 @@ void onMotionNotify(XMotionEvent *ev)
 {
     if (dragFrame == None)
     {
-        Client *client = findClientByFrame(ev->window);
-        if (client)
+        if (TITLE_ENABLED)
         {
-            // Check if close button's hovered state is to change
-            int hovering = isOverCloseButton(ev->x, ev->y, client->geo.width);
-            if (hovering != client->closeHover)
+            Client *client = findClientByFrame(ev->window);
+            if (client)
             {
-                client->closeHover = hovering;
-                drawTitleBar(client);
+                // Check if close button's hovered state is to change
+                int hovering = isOverCloseButton(ev->x, ev->y, client->geo.width);
+                if (hovering != client->closeHover)
+                {
+                    client->closeHover = hovering;
+                    drawTitleBar(client);
+                }
             }
         }
         return;
@@ -195,7 +198,7 @@ void onMotionNotify(XMotionEvent *ev)
     // Move the frame by the total delta from drag start
     int dx = ev->x_root - dragRootX;
     int dy = ev->y_root - dragRootY;
-    XMoveWindow(dpy, dragFrame, dragStartX + dx, dragStartY + dy);
+    XMoveWindow(DPY, dragFrame, dragStartX + dx, dragStartY + dy);
 
     // Test for potential snap zone and create indicator if needed
     SnapZone zone = getSnapZone(ev->x_root, ev->y_root);
@@ -203,7 +206,7 @@ void onMotionNotify(XMotionEvent *ev)
     {
         dragPreview = zone;
         createSnapIndicator(zone);
-        XSetWindowBorder(dpy, dragFrame, (zone != NONE) ? SNAP_COL : BOR_COL);
+        XSetWindowBorder(DPY, dragFrame, (zone != NONE) ? SNAP_COL : BOR_COL);
     }
 }
 
@@ -224,7 +227,7 @@ void onPropertyNotify(XPropertyEvent *ev)
 
     // Fetch the new WM_NAME and update the Client's name with it
     char *name = NULL;
-    if (XFetchName(dpy, client->child, &name) && name)
+    if (XFetchName(DPY, client->child, &name) && name)
     {
         snprintf(client->name, sizeof(client->name), "%s", name);
         XFree(name);
@@ -240,7 +243,7 @@ void onPropertyNotify(XPropertyEvent *ev)
 void onUnmapNotify(XUnmapEvent *ev)
 {
     // Ignore UnmapNotify from a XReparentWindow call
-    if (ev->event == root)
+    if (ev->event == ROOT)
         return;
     // Ignore UnmapNotify from something we don't manage
     if (!findClientByChild(ev->window))

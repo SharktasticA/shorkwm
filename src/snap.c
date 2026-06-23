@@ -32,19 +32,19 @@ void applySnap(Client *client, SnapZone zone)
     if (!client->snapped)
     {
         XWindowAttributes wa;
-        XGetWindowAttributes(dpy, client->frame, &wa);
+        XGetWindowAttributes(DPY, client->frame, &wa);
         client->savedGeo = client->geo;
     }
 
     // Get and set new location and dimensions
     ClientGeometry newProps = getSnapGeometry(zone);
-    XMoveResizeWindow(dpy, client->frame, newProps.x, newProps.y, newProps.width, newProps.height + TITLE_HEIGHT);
-    XMoveResizeWindow(dpy, client->child, 0, TITLE_HEIGHT, newProps.width, newProps.height);
+    XMoveResizeWindow(DPY, client->frame, newProps.x, newProps.y, newProps.width, newProps.height + TITLE_HEIGHT_ACTUAL);
+    XMoveResizeWindow(DPY, client->child, 0, TITLE_HEIGHT_ACTUAL, newProps.width, newProps.height);
     client->geo = newProps;
     client->snapped = 1;
 
     // Update border to snap colour
-    XSetWindowBorder(dpy, client->frame, SNAP_COL);
+    XSetWindowBorder(DPY, client->frame, SNAP_COL);
 }
 
 /**
@@ -65,13 +65,7 @@ void createSnapIndicator(SnapZone zone)
     ClientGeometry newProps = getSnapGeometry(zone);
 
     // Create a simple window at the potential snap zone
-    snapIndicator = XCreateSimpleWindow(
-        dpy, root,
-        newProps.x,
-        newProps.y,
-        newProps.width,
-        newProps.height,
-        0, 0, 0);
+    snapIndicator = XCreateSimpleWindow(DPY, ROOT, newProps.x, newProps.y, newProps.width, newProps.height,  0, 0, 0);
 
     // Don't let the WM manage it
     XSetWindowAttributes attr;
@@ -80,13 +74,13 @@ void createSnapIndicator(SnapZone zone)
     // Given the window a unique appearance
     attr.background_pixel = SNAP_INDI_BAK_COL;
     attr.border_pixel = SNAP_INDI_BOR_COL;
-    XChangeWindowAttributes(dpy, snapIndicator, CWOverrideRedirect | CWBackPixel | CWBorderPixel, &attr);
-    XSetWindowBorderWidth(dpy, snapIndicator, 3);
+    XChangeWindowAttributes(DPY, snapIndicator, CWOverrideRedirect | CWBackPixel | CWBorderPixel, &attr);
+    XSetWindowBorderWidth(DPY, snapIndicator, 3);
 
     // Stack it below the held window so it doesn't cover it
-    XLowerWindow(dpy, snapIndicator);
-    XMapWindow(dpy, snapIndicator);
-    XFlush(dpy);
+    XLowerWindow(DPY, snapIndicator);
+    XMapWindow(DPY, snapIndicator);
+    XFlush(DPY);
 }
 
 /**
@@ -96,10 +90,10 @@ void delSnapIndicator(void)
 {
     if (snapIndicator != None)
     {
-        XDestroyWindow(dpy, snapIndicator);
+        XDestroyWindow(DPY, snapIndicator);
         snapIndicator = None;
     }
-    XFlush(dpy);
+    XFlush(DPY);
 }
 
 /**
@@ -111,8 +105,8 @@ void delSnapIndicator(void)
 ClientGeometry getSnapGeometry(SnapZone zone)
 {
     ClientGeometry geo = {0};
-    int hw = screenW / 2;
-    int hh = screenH / 2;
+    int hw = SCREEN_W / 2;
+    int hh = SCREEN_H / 2;
     int b2 = BOR_SIZE * 2;
 
     switch (zone)
@@ -126,44 +120,44 @@ ClientGeometry getSnapGeometry(SnapZone zone)
         case NORTH:
             geo.x = 0;
             geo.y = 0;
-            geo.width = screenW - b2;
+            geo.width = SCREEN_W - b2;
             geo.height = hh - b2;
             break;
         case NORTH_EAST:
             geo.x = hw;
             geo.y = 0;
-            geo.width = screenW - hw - b2;
+            geo.width = SCREEN_W - hw - b2;
             geo.height = hh - b2;
             break;
         case EAST:
             geo.x = hw;
             geo.y = 0;
-            geo.width = screenW - hw - b2;
-            geo.height = screenH - b2;
+            geo.width = SCREEN_W - hw - b2;
+            geo.height = SCREEN_H - b2;
             break;
         case SOUTH_EAST:
             geo.x = hw;
             geo.y = hh;
-            geo.width = screenW - hw - b2;
-            geo.height = screenH - hh - b2;
+            geo.width = SCREEN_W - hw - b2;
+            geo.height = SCREEN_H - hh - b2;
             break;
         case SOUTH:
             geo.x = 0;
             geo.y = hh;
-            geo.width = screenW - b2;
-            geo.height = screenH - hh - b2;
+            geo.width = SCREEN_W - b2;
+            geo.height = SCREEN_H - hh - b2;
             break;
         case SOUTH_WEST:
             geo.x = 0;
             geo.y = hh;
             geo.width = hw - b2;
-            geo.height = screenH - hh - b2;
+            geo.height = SCREEN_H - hh - b2;
             break;
         case WEST:
             geo.x = 0;
             geo.y = 0;
             geo.width = hw - b2;
-            geo.height = screenH - b2;
+            geo.height = SCREEN_H - b2;
             break;
         default:
             break;
@@ -188,17 +182,17 @@ SnapZone getSnapZone(int cX, int cY)
         atNorth = 1;
         atWest = 1;
     }
-    else if (cY <= (SNAP_THRES * SNAP_CORNER_BIAS) && cX >= screenW - (SNAP_THRES * SNAP_CORNER_BIAS))
+    else if (cY <= (SNAP_THRES * SNAP_CORNER_BIAS) && cX >= SCREEN_W - (SNAP_THRES * SNAP_CORNER_BIAS))
     {
         atNorth = 1;
         atEast = 1;
     }
-    else if (cY >= screenH - (SNAP_THRES * SNAP_CORNER_BIAS) && cX <= (SNAP_THRES * SNAP_CORNER_BIAS))
+    else if (cY >= SCREEN_H - (SNAP_THRES * SNAP_CORNER_BIAS) && cX <= (SNAP_THRES * SNAP_CORNER_BIAS))
     {
         atSouth = 1;
         atWest = 1;
     }
-    else if (cY >= screenH - (SNAP_THRES * SNAP_CORNER_BIAS) && cX >= screenW - (SNAP_THRES * SNAP_CORNER_BIAS))
+    else if (cY >= SCREEN_H - (SNAP_THRES * SNAP_CORNER_BIAS) && cX >= SCREEN_W - (SNAP_THRES * SNAP_CORNER_BIAS))
     {
         atSouth = 1;
         atEast = 1;
@@ -208,9 +202,9 @@ SnapZone getSnapZone(int cX, int cY)
         atWest = 1;
     else if (cY <= SNAP_THRES)
         atNorth = 1;
-    else if (cX >= screenW - SNAP_THRES)
+    else if (cX >= SCREEN_W - SNAP_THRES)
         atEast = 1;
-    else if (cY >= screenH - SNAP_THRES)
+    else if (cY >= SCREEN_H - SNAP_THRES)
         atSouth = 1;
 
     if (atNorth && atWest)
@@ -243,16 +237,17 @@ SnapZone getSnapZone(int cX, int cY)
 void restorePreSnap(Client *client, int newX, int newY)
 {
     // If not snapped, get out
-    if (!client->snapped) return;
+    if (!client->snapped)
+        return;
 
     // Reposition and resize window
-    XMoveResizeWindow(dpy, client->frame, newX, newY, client->savedGeo.width, client->savedGeo.height + TITLE_HEIGHT);
-    XMoveResizeWindow(dpy, client->child, 0, TITLE_HEIGHT, client->savedGeo.width, client->savedGeo.height);
+    XMoveResizeWindow(DPY, client->frame, newX, newY, client->savedGeo.width, client->savedGeo.height + TITLE_HEIGHT_ACTUAL);
+    XMoveResizeWindow(DPY, client->child, 0, TITLE_HEIGHT_ACTUAL, client->savedGeo.width, client->savedGeo.height);
 
     // Restore pre-snap props
     client->geo = client->savedGeo;
     client->snapped = 0;
 
     // Revert to normal border colour
-    XSetWindowBorder(dpy, client->frame, BOR_COL);
+    XSetWindowBorder(DPY, client->frame, BOR_COL);
 }

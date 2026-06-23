@@ -17,6 +17,7 @@ static const char *VERSION = "1.0-pt1";
 
 
 
+#include "config.h"
 #include "events.h"
 #include "shorkwm.h"
 
@@ -26,11 +27,12 @@ static const char *VERSION = "1.0-pt1";
 
 
 
-static int anotherWMRunning = 0;
-Display *dpy = NULL;
-Window root = None;
-int screenW = 0;
-int screenH = 0;
+static int ANOTHER_WM_RUNNING = 0;
+Display *DPY = NULL;
+Window ROOT = None;
+int SCREEN_W = 0;
+int SCREEN_H = 0;
+int TITLE_HEIGHT_ACTUAL = 0;
 
 
 
@@ -45,7 +47,7 @@ static int onXError(Display *d, XErrorEvent *err)
     (void)d;
     if (err->error_code == BadAccess)
     {
-        anotherWMRunning = 1;
+        ANOTHER_WM_RUNNING = 1;
         return 0;
     }
     char buffer[256];
@@ -65,24 +67,26 @@ int main(int argc, char *argv[])
         }
     }
 
-    dpy = XOpenDisplay(NULL);
-    if (!dpy)
+    DPY = XOpenDisplay(NULL);
+    if (!DPY)
     {
         fprintf(stderr, "Cannot open: %s\n", getenv("DISPLAY") ? getenv("DISPLAY") : "(not set)");
         return 1;
     }
 
-    int scr  = DefaultScreen(dpy);
-    root = DefaultRootWindow(dpy);
-    screenW = DisplayWidth(dpy, scr);
-    screenH = DisplayHeight(dpy, scr);
-    fprintf(stderr, "Display: %s (%dx%d)\n", DisplayString(dpy), screenW, screenH);
+    int scr  = DefaultScreen(DPY);
+    ROOT = DefaultRootWindow(DPY);
+    SCREEN_W = DisplayWidth(DPY, scr);
+    SCREEN_H = DisplayHeight(DPY, scr);
+    fprintf(stderr, "Display: %s (%dx%d)\n", DisplayString(DPY), SCREEN_W, SCREEN_H);
+
+    TITLE_HEIGHT_ACTUAL = TITLE_ENABLED ? TITLE_HEIGHT : 0;
 
     XSetErrorHandler(onXError);
-    XSelectInput(dpy, root, SubstructureRedirectMask | SubstructureNotifyMask);
-    XSync(dpy, False);
+    XSelectInput(DPY, ROOT, SubstructureRedirectMask | SubstructureNotifyMask);
+    XSync(DPY, False);
 
-    if (anotherWMRunning)
+    if (ANOTHER_WM_RUNNING)
     {
         fprintf(stderr, "ERROR: another window manager is already running\n");
         return 1;
@@ -91,7 +95,7 @@ int main(int argc, char *argv[])
     for (;;)
     {
         XEvent ev;
-        XNextEvent(dpy, &ev);
+        XNextEvent(DPY, &ev);
 
         switch (ev.type)
         {
