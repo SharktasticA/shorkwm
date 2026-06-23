@@ -56,7 +56,16 @@ void createFrame(Window child)
     // Draw the initial title bar
     Client *client = addClient(frame, child, (ClientGeometry){ wa.x, wa.y, wa.width, wa.height });
     if (client)
+    {
+        char *name = NULL;
+        if (XFetchName(DPY, child, &name) && name)
+        {
+            snprintf(client->name, sizeof(client->name), "%s", name);
+            XFree(name);
+        }
+
         drawTitleBar(client);
+    }
 
     fprintf(stderr, "Frame: 0x%lx -> 0x%lx\n", child, frame);
 }
