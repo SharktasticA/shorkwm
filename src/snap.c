@@ -26,35 +26,25 @@ Window snapIndicator = None;
  * @param c Client to snap
  * @param zone Where to snap to
  */
-void applySnap(Client *c, SnapZone zone)
+void applySnap(Client *client, SnapZone zone)
 {
     // Save pre-snap locations and dimensions
-    if (!c->snapped)
+    if (!client->snapped)
     {
         XWindowAttributes wa;
-        XGetWindowAttributes(dpy, c->frame, &wa);
-        c->savedGeo = c->geo;
+        XGetWindowAttributes(dpy, client->frame, &wa);
+        client->savedGeo = client->geo;
     }
 
     // Get and set new location and dimensions
     ClientGeometry newProps = getSnapGeometry(zone);
-    XMoveResizeWindow(
-        dpy, c->frame,
-        newProps.x,
-        newProps.y,
-        newProps.width,
-        newProps.height
-    );
-    XMoveResizeWindow(
-        dpy, c->child, 0, 0,
-        newProps.width,
-        newProps.height
-    );
-    c->geo = newProps;
-    c->snapped = 1;
+    XMoveResizeWindow(dpy, client->frame, newProps.x, newProps.y, newProps.width, newProps.height + TITLE_HEIGHT);
+    XMoveResizeWindow(dpy, client->child, 0, TITLE_HEIGHT, newProps.width, newProps.height);
+    client->geo = newProps;
+    client->snapped = 1;
 
     // Update border to snap colour
-    XSetWindowBorder(dpy, c->frame, SNAP_COL);
+    XSetWindowBorder(dpy, client->frame, SNAP_COL);
 }
 
 /**
@@ -88,8 +78,8 @@ void createSnapIndicator(SnapZone zone)
     attr.override_redirect = True;
 
     // Given the window a unique appearance
-    attr.background_pixel = SNAP_INDI_BAK;
-    attr.border_pixel = SNAP_INDI_BOR;
+    attr.background_pixel = SNAP_INDI_BAK_COL;
+    attr.border_pixel = SNAP_INDI_BOR_COL;
     XChangeWindowAttributes(dpy, snapIndicator, CWOverrideRedirect | CWBackPixel | CWBorderPixel, &attr);
     XSetWindowBorderWidth(dpy, snapIndicator, 3);
 
@@ -250,19 +240,19 @@ SnapZone getSnapZone(int cX, int cY)
  * @param newX Window's new X position
  * @param newY Window's new Y position
  */
-void restorePreSnap(Client *c, int newX, int newY)
+void restorePreSnap(Client *client, int newX, int newY)
 {
     // If not snapped, get out
-    if (!c->snapped) return;
+    if (!client->snapped) return;
 
     // Reposition and resize window
-    XMoveResizeWindow(dpy, c->frame, newX, newY, c->savedGeo.width, c->savedGeo.height);
-    XMoveResizeWindow(dpy, c->child, 0, 0, c->savedGeo.width, c->savedGeo.height);
+    XMoveResizeWindow(dpy, client->frame, newX, newY, client->savedGeo.width, client->savedGeo.height + TITLE_HEIGHT);
+    XMoveResizeWindow(dpy, client->child, 0, TITLE_HEIGHT, client->savedGeo.width, client->savedGeo.height);
 
     // Restore pre-snap props
-    c->geo = c->savedGeo;
-    c->snapped = 0;
+    client->geo = client->savedGeo;
+    client->snapped = 0;
 
     // Revert to normal border colour
-    XSetWindowBorder(dpy, c->frame, BOR_COL);
+    XSetWindowBorder(dpy, client->frame, BOR_COL);
 }

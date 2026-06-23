@@ -17,6 +17,9 @@
 #include "frame.h"
 #include "snap.h"
 
+#include <stdio.h>
+#include <X11/Xatom.h>
+
 
 
 // Dragged window frame - used to ensure motion and release events go to the
@@ -40,6 +43,25 @@ void onButtonPress(XButtonEvent *ev)
     Client *client = findClientByFrame(ev->window);
     if (!client)
         return;
+
+    // Check if the click landed on the close button
+    if (isOverCloseButton(ev->x, ev->y, client->geo.width))
+    {
+        // "Ask" program to close
+        Atom wmDelete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
+        Atom wmProto = XInternAtom(dpy, "WM_PROTOCOLS", False);
+
+        XEvent closeEv;
+        closeEv.xclient.type = ClientMessage;
+        closeEv.xclient.window  = client->child;
+        closeEv.xclient.message_type = wmProto;
+        closeEv.xclient.format = 32;
+        closeEv.xclient.data.l[0] = wmDelete;
+        closeEv.xclient.data.l[1] = CurrentTime;
+        XSendEvent(dpy, client->child, False, NoEventMask, &closeEv);
+
+        return;
+    }
 
     // Bring frame to top
     XRaiseWindow(dpy, client->frame);
@@ -122,6 +144,22 @@ void onConfigureRequest(XConfigureRequestEvent *ev)
 }
 
 /**
+ * On expose event. Used to redraw title bar when this window became visible.
+ * @param ev Received XExposeEvent 
+ */
+void onExpose(XExposeEvent *ev)
+{
+    if (ev->count != 0)
+        return;
+
+    Client *client = findClientByFrame(ev->window);
+    if (!client)
+        return;
+
+    drawTitleBar(client);
+}
+
+/**
  * Used to initiate a child window's Client creation.
  * @param ev Received XMapRequestEvent
  */
@@ -132,14 +170,27 @@ void onMapRequest(XMapRequestEvent *ev)
 }
 
 /**
- * On motion notify event. Used to move a dragged frame and test for a
- * potential snap zone.
+ * On motion notify event. Used to check when a window's close button is
+ * hovered over, or to move a dragged frame and test for a potential snap zone.
  * @param ev Received XMotionEvent
  */
 void onMotionNotify(XMotionEvent *ev)
 {
     if (dragFrame == None)
+    {
+        Client *client = findClientByFrame(ev->window);
+        if (client)
+        {
+            // Check if close button's hovered state is to change
+            int hovering = isOverCloseButton(ev->x, ev->y, client->geo.width);
+            if (hovering != client->closeHover)
+            {
+                client->closeHover = hovering;
+                drawTitleBar(client);
+            }
+        }
         return;
+    }
 
     // Move the frame by the total delta from drag start
     int dx = ev->x_root - dragRootX;
@@ -154,6 +205,32 @@ void onMotionNotify(XMotionEvent *ev)
         createSnapIndicator(zone);
         XSetWindowBorder(dpy, dragFrame, (zone != NONE) ? SNAP_COL : BOR_COL);
     }
+}
+
+/**
+ * On PropertyNotify event. Used to update a Client's title when WM_NAME
+ * changes.
+ * @param ev Received XPropertyEvent
+ */
+void onPropertyNotify(XPropertyEvent *ev)
+{
+    // Only proceed if WM_NAME has changed
+    if (ev->atom != XA_WM_NAME)
+        return;
+
+    Client *client = findClientByChild(ev->window);
+    if (!client)
+        return;
+
+    // Fetch the new WM_NAME and update the Client's name with it
+    char *name = NULL;
+    if (XFetchName(dpy, client->child, &name) && name)
+    {
+        snprintf(client->name, sizeof(client->name), "%s", name);
+        XFree(name);
+    }
+
+    drawTitleBar(client);
 }
 
 /**

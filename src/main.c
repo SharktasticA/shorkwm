@@ -95,23 +95,29 @@ int main(int argc, char *argv[])
 
         switch (ev.type)
         {
-            case MapRequest:
-                onMapRequest(&ev.xmaprequest);
-                break;
-            case UnmapNotify:
-                onUnmapNotify(&ev.xunmap);
-                break;
-            case ConfigureRequest:
-                onConfigureRequest(&ev.xconfigurerequest);
-                break;
             case ButtonPress:
                 onButtonPress(&ev.xbutton);
                 break;
             case ButtonRelease:
                 onButtonRelease(&ev.xbutton);
                 break;
+            case ConfigureRequest:
+                onConfigureRequest(&ev.xconfigurerequest);
+                break;
+            case Expose:
+                onExpose(&ev.xexpose);
+                break;
+            case MapRequest:
+                onMapRequest(&ev.xmaprequest);
+                break;
             case MotionNotify:
                 onMotionNotify(&ev.xmotion);
+                break;
+            case PropertyNotify:
+                onPropertyNotify(&ev.xproperty);
+                break;
+            case UnmapNotify:
+                onUnmapNotify(&ev.xunmap);
                 break;
         }
     }

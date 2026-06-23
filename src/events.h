@@ -22,8 +22,10 @@
 void onButtonPress(XButtonEvent*);
 void onButtonRelease(XButtonEvent*);
 void onConfigureRequest(XConfigureRequestEvent*);
+void onExpose(XExposeEvent*);
 void onMapRequest(XMapRequestEvent*);
 void onMotionNotify(XMotionEvent*);
+void onPropertyNotify(XPropertyEvent*);
 void onUnmapNotify(XUnmapEvent*);
 
 #endif

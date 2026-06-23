@@ -21,5 +21,7 @@
 
 void createFrame(Window);
 void deleteFrame(Window);
+void drawTitleBar(Client*);
+int isOverCloseButton(int, int, int);
 
 #endif

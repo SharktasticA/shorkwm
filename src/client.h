@@ -48,12 +48,15 @@ struct Client {
     // A saved copy of a previous location/size (used for restoring a snapped
     // window)
     ClientGeometry savedGeo;
-
-    // Flags if the window is currently snapped
-    int snapped;
+    
+    // Flags if the pointer is currently hovering over the close button
+    int closeHover;
 
     // Flags if this window has keyboard focus
     int focused;
+
+    // Flags if the window is currently snapped
+    int snapped;
 };
 
 

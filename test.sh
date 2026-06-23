@@ -11,5 +11,5 @@ done
 DISPLAY=:1 ./shorkwm &
 sleep 0.3
 DISPLAY=:1 xterm &
-DISPLAY=:1 xterm &
+DISPLAY=:1 galculator &
 wait
