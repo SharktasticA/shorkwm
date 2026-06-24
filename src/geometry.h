@@ -12,16 +12,15 @@
 
 
 
-#ifndef FRAME
-#define FRAME
+#ifndef GEOMETRY
+#define GEOMETRY
 
-#include "shorkwm.h"
-
-
-
-void createFrame(Window);
-void deleteFrame(Window);
-void drawTitleBar(Client*);
-int isOverCaptButton(ButtonType, int, int, int);
+// A window's location and size 
+typedef struct {
+    int x;
+    int y;
+    int width;
+    int height;
+} ClientGeometry;
 
 #endif

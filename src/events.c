@@ -12,6 +12,7 @@
 
 
 
+#include "button.h"
 #include "events.h"
 #include "client.h"
 #include "frame.h"
@@ -45,30 +46,44 @@ void onButtonPress(XButtonEvent *ev)
         return;
 
     // Check if the click landed on the close button
-    if (ENABLE_TITLE && isOverCloseButton(ev->x, ev->y, client->geo.width))
+    if (ENABLE_TITLE)
     {
-        // "Ask" program to close
-        Atom wmDelete = XInternAtom(DPY, "WM_DELETE_WINDOW", False);
-        Atom wmProto = XInternAtom(DPY, "WM_PROTOCOLS", False);
+        if (isOverCaptButton(BTN_CAPT_CLOSE, ev->x, ev->y, client->geo.width))
+        {
+            // "Ask" program to close
+            Atom wmDelete = XInternAtom(DPY, "WM_DELETE_WINDOW", False);
+            Atom wmProto = XInternAtom(DPY, "WM_PROTOCOLS", False);
 
-        XEvent closeEv;
-        closeEv.xclient.type = ClientMessage;
-        closeEv.xclient.window  = client->child;
-        closeEv.xclient.message_type = wmProto;
-        closeEv.xclient.format = 32;
-        closeEv.xclient.data.l[0] = wmDelete;
-        closeEv.xclient.data.l[1] = CurrentTime;
-        XSendEvent(DPY, client->child, False, NoEventMask, &closeEv);
+            XEvent closeEv;
+            closeEv.xclient.type = ClientMessage;
+            closeEv.xclient.window  = client->child;
+            closeEv.xclient.message_type = wmProto;
+            closeEv.xclient.format = 32;
+            closeEv.xclient.data.l[0] = wmDelete;
+            closeEv.xclient.data.l[1] = CurrentTime;
+            XSendEvent(DPY, client->child, False, NoEventMask, &closeEv);
 
-        return;
+            return;
+        }
+        else if (isOverCaptButton(BTN_CAPT_MAX, ev->x, ev->y, client->geo.width))
+        {
+            // Bring frame to top
+            XRaiseWindow(DPY, client->frame);
+
+            if (client->snap == ALL)
+                unsnap(client, 0, 0);
+            else
+                snap(client, ALL);
+            return;
+        }
     }
 
     // Bring frame to top
     XRaiseWindow(DPY, client->frame);
 
     // If client is snapped, time to unsnap!
-    if (client->snapped)
-        restorePreSnap(client, ev->x_root - client->savedGeo.x / 2, ev->y_root - 8);
+    if (client->snap != NONE)
+        unsnap(client, ev->x_root - (client->savedGeo.width / 2), ev->y_root - (TITLE_HEIGHT_ACTUAL / 2));
 
     // Record the frame being dragged and where the drag started so we calc how
     // far the client moved in onMotionNotify
@@ -108,7 +123,7 @@ void onButtonRelease(XButtonEvent *ev)
     {
         Client *client = findClientByFrame(dragFrame);
         if (client)
-            applySnap(client, zone);
+            snap(client, zone);
     }
     else
         XSetWindowBorder(DPY, dragFrame, BOR_REST_COL);
@@ -176,18 +191,21 @@ void onMapRequest(XMapRequestEvent *ev)
  */
 void onMotionNotify(XMotionEvent *ev)
 {
+    Client *client = findClientByFrame(ev->window);
+
     if (dragFrame == None)
     {
         if (ENABLE_TITLE)
         {
-            Client *client = findClientByFrame(ev->window);
             if (client)
             {
                 // Check if close button's hovered state is to change
-                int hovering = isOverCloseButton(ev->x, ev->y, client->geo.width);
-                if (hovering != client->closeHover)
+                int hoverClose = isOverCaptButton(BTN_CAPT_CLOSE, ev->x, ev->y, client->geo.width);
+                int hoverMinMax = isOverCaptButton(BTN_CAPT_MAX, ev->x, ev->y, client->geo.width);
+                if (hoverClose != client->closeHover || hoverMinMax != client->minMaxHover)
                 {
-                    client->closeHover = hovering;
+                    client->closeHover = hoverClose;
+                    client->minMaxHover = hoverMinMax;
                     drawTitleBar(client);
                 }
             }
@@ -199,6 +217,11 @@ void onMotionNotify(XMotionEvent *ev)
     int dx = ev->x_root - dragRootX;
     int dy = ev->y_root - dragRootY;
     XMoveWindow(DPY, dragFrame, dragStartX + dx, dragStartY + dy);
+    if (client)
+    {
+        client->geo.x = dragStartX + dx;
+        client->geo.y = dragStartY + dy;
+    }
 
     // Test for potential snap zone and create indicator if needed
     SnapZone zone = getSnapZone(ev->x_root, ev->y_root);

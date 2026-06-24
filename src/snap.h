@@ -16,14 +16,18 @@
 #define SNAP
 
 #include "config.h"
+#include "geometry.h"
 #include "shorkwm.h"
 
 
+
+typedef struct Client Client;
 
 // Possible window snap zones
 typedef enum
 {
     NONE,
+    ALL,
     NORTH_WEST,
     NORTH,
     NORTH_EAST,
@@ -31,7 +35,7 @@ typedef enum
     SOUTH_EAST,
     SOUTH,
     SOUTH_WEST,
-    WEST,
+    WEST
 } SnapZone;
 
 
@@ -41,11 +45,11 @@ extern Window snapIndicator;
 
 
 
-void applySnap(Client*, SnapZone);
 void createSnapIndicator(SnapZone);
 void delSnapIndicator(void);
 ClientGeometry getSnapGeometry(SnapZone, int);
 SnapZone getSnapZone(int, int);
-void restorePreSnap(Client*, int, int);
+void snap(Client*, SnapZone);
+void unsnap(Client*, int, int);
 
 #endif

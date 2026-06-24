@@ -15,19 +15,13 @@
 #ifndef CLIENT
 #define CLIENT
 
+#include "geometry.h"
 #include "shorkwm.h"
+#include "snap.h"
 
 #include <X11/Xft/Xft.h>
 
 
-
-// A window's location and size 
-typedef struct {
-    int x;
-    int y;
-    int width;
-    int height;
-} ClientGeometry;
 
 // A window being managed by SHORKWM
 typedef struct Client Client;
@@ -51,21 +45,25 @@ struct Client {
     // window)
     ClientGeometry savedGeo;
 
-    // Xft drawing context for title bar text (when ENABLE_AA=1)
+    // Current snap zone (NONE if not snapped; ALL if maximised)
+    SnapZone snap;
+
+    // Xft drawing context for title bar text (ENABLE_AA=1)
     XftDraw *xftDraw;
 
-    // Xft font used for title bar text (when ENABLE_AA=1)
+    // Xft font used for title bar text (ENABLE_AA=1)
     XftFont *xftFont;
     
-    // Flags if the pointer is currently hovering over the close button (when
-    // ENABLE_TITLE=1)
+    // Flags if the pointer is currently hovering over the close button
+    // (ENABLE_TITLE=1)
     int closeHover;
+    
+    // Flags if the pointer is currently hovering over the min/max button
+    // (ENABLE_TITLE=1)
+    int minMaxHover;
 
     // Flags if this window has keyboard focus
     int focused;
-
-    // Flags if the window is currently snapped
-    int snapped;
 };
 
 

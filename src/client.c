@@ -40,7 +40,7 @@ Client *addClient(Window frame, Window child, ClientGeometry startGeo)
     client->frame = frame;
     client->child = child;
     client->geo = startGeo;
-    client->snapped = 0;
+    client->snap = NONE;
     client->focused = 0;
 
     // Prepend to CLIENTS list

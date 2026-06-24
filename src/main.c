@@ -80,15 +80,7 @@ int main(int argc, char *argv[])
     SCREEN_H = DisplayHeight(DPY, scr);
     fprintf(stderr, "Display: %s (%dx%d)\n", DisplayString(DPY), SCREEN_W, SCREEN_H);
 
-    // Validate boolean config values to ensure they have a good default if
-    // incorrectly set
-    if (CLOSE_BTN_RND != 0 && CLOSE_BTN_RND != 1)
-        CLOSE_BTN_RND = 1;
-    if (ENABLE_AA != 0 && ENABLE_AA != 1)
-        ENABLE_AA = 1;
-    if (ENABLE_TITLE != 0 && ENABLE_TITLE != 1)
-        ENABLE_TITLE = 1;
-
+    validateConfig();
     TITLE_HEIGHT_ACTUAL = ENABLE_TITLE ? TITLE_HEIGHT : 0;
 
     XSetErrorHandler(onXError);

@@ -22,32 +22,6 @@ Window snapIndicator = None;
 
 
 /**
- * Snaps the given client to the designed snap zone.
- * @param c Client to snap
- * @param zone Where to snap to
- */
-void applySnap(Client *client, SnapZone zone)
-{
-    // Save pre-snap locations and dimensions
-    if (!client->snapped)
-    {
-        XWindowAttributes wa;
-        XGetWindowAttributes(DPY, client->frame, &wa);
-        client->savedGeo = client->geo;
-    }
-
-    // Get and set new location and dimensions
-    ClientGeometry newProps = getSnapGeometry(zone, BOR_SIZE);
-    XMoveResizeWindow(DPY, client->frame, newProps.x, newProps.y, newProps.width, newProps.height);
-    XMoveResizeWindow(DPY, client->child, 0, TITLE_HEIGHT_ACTUAL, newProps.width, newProps.height);
-    client->geo = newProps;
-    client->snapped = 1;
-
-    // Update border to snap colour
-    XSetWindowBorder(DPY, client->frame, BOR_SNAP_COL);
-}
-
-/**
  * Creates a temporacY window that indicates the snap zone the user is
  * currently holding a window at.
  * @param zone Where we may snap to
@@ -112,6 +86,12 @@ ClientGeometry getSnapGeometry(SnapZone zone, int borderSize)
 
     switch (zone)
     {
+        case ALL:
+            geo.x = 0;
+            geo.y = 0;
+            geo.width  = SCREEN_W - b2;
+            geo.height = SCREEN_H - b2;
+            break;
         case NORTH_WEST:
             geo.x = 0;
             geo.y = 0;
@@ -229,25 +209,60 @@ SnapZone getSnapZone(int cX, int cY)
 }
 
 /**
- * Restores a snapped window to its pre-snap geometry and repositioning it at
- * the new given location.
- * @param c Client to restore to pre-snap
+ * Snaps the given client to the designed snap zone.
+ * @param client Client to snap
+ * @param zone Where to snap to
+ */
+void snap(Client *client, SnapZone zone)
+{
+    // Save pre-snap locations and dimensions
+    if (client->snap == NONE)
+    {
+        XWindowAttributes wa;
+        XGetWindowAttributes(DPY, client->frame, &wa);
+        client->savedGeo = client->geo;
+    }
+
+    // Get and set new location and dimensions
+    ClientGeometry newProps = getSnapGeometry(zone, BOR_SIZE);
+    XMoveResizeWindow(DPY, client->frame, newProps.x, newProps.y, newProps.width, newProps.height);
+    XMoveResizeWindow(DPY, client->child, 0, TITLE_HEIGHT_ACTUAL, newProps.width, newProps.height);
+    client->geo = newProps;
+    client->snap = zone;
+
+    // Update border to snap colour
+    XSetWindowBorder(DPY, client->frame, BOR_SNAP_COL);
+}
+
+/**
+ * Restores a snapped window to its pre-snap size and either its previous
+ * location (snap=ALL) or a new location based on the pointer position (all
+ * others).
+ * @param client Client to restore to pre-snap
  * @param newX Window's new X position
  * @param newY Window's new Y position
  */
-void restorePreSnap(Client *client, int newX, int newY)
+void unsnap(Client *client, int newX, int newY)
 {
     // If not snapped, get out
-    if (!client->snapped)
+    if (client->snap == NONE)
         return;
 
     // Reposition and resize window
-    XMoveResizeWindow(DPY, client->frame, newX, newY, client->savedGeo.width, client->savedGeo.height + TITLE_HEIGHT_ACTUAL);
+    if (client->snap == ALL)
+        XMoveResizeWindow(DPY, client->frame, client->savedGeo.x, client->savedGeo.y, client->savedGeo.width, client->savedGeo.height + TITLE_HEIGHT_ACTUAL);
+    else
+        XMoveResizeWindow(DPY, client->frame, newX, newY, client->savedGeo.width, client->savedGeo.height + TITLE_HEIGHT_ACTUAL);
     XMoveResizeWindow(DPY, client->child, 0, TITLE_HEIGHT_ACTUAL, client->savedGeo.width, client->savedGeo.height);
 
     // Restore pre-snap props
     client->geo = client->savedGeo;
-    client->snapped = 0;
+    if (client->snap != ALL)
+    {
+        client->geo.x = newX;
+        client->geo.y = newY;
+    }
+    client->snap = NONE;
 
     // Revert to normal border colour
     XSetWindowBorder(DPY, client->frame, BOR_REST_COL);

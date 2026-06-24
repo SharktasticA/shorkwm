@@ -22,32 +22,43 @@ extern int BAK_COL;
 extern int BOR_REST_COL;
 // Window border colour when snapped
 extern int BOR_SNAP_COL;
-// Window border size
+// Window border size (>= 0)
 extern int BOR_SIZE;
 
-// Close button background colour
-extern int CLOSE_BTN_BAK_COL;
-// Close button hover colour
-extern int CLOSE_BTN_HOV_COL;
-// Close button margin from right
-extern int CLOSE_BTN_MAR;
-// Close button rounded flag (1=rectangle, 0=circle)
-extern int CLOSE_BTN_RND;
-// Close button width/height
-extern int CLOSE_BTN_SIZE; 
-// Close button symbol colour
-extern int CLOSE_BTN_SYM_COL;
-// Close button symbol margin from left
-extern int CLOSE_BTN_SYM_MAR;
+// Caption button background colour
+extern int CAPT_BTN_BAK_COL;
+// Caption button hover colour
+extern int CAPT_BTN_HOV_COL;
+//Caption button no. of polygon points (when ENABLE_AA=1, 4-128)
+extern int CAPT_BTN_POLY_PNTS;
+// Caption button rounded flag (1=rectangle, 0=circle)
+extern int CAPT_BTN_RND;
+// Caption button width/height
+extern int CAPT_BTN_SIZE;
+// Caption button spacing
+extern int CAPT_BTN_SPACING;
+// Caption button symbol surrounding margin
+extern int CAPT_BTN_SYM_MAR;
+// Caption button symbol colour
+extern int CAPT_BTN_SYM_COL;
+// Caption button extra top margin
+extern int CAPT_BTN_TOP_MAR_EXT;
+
+// Close caption button hover colour
+extern int CLOSE_CAPT_BTN_HOV_COL;
+// Close caption button margin from right (>=0)
+extern int CLOSE_CAPT_BTN_RIGHT_MAR;
+// Close caption button symbol colour
+extern int CLOSE_CAPT_BTN_SYM_COL;
 
 // Enables antialiasing/smoother shapes and text (1=y, 0=n)
 extern int ENABLE_AA;
 // Enables window title bars (1=y, 0=n)
 extern int ENABLE_TITLE;
 
-// Snap zone detection corner bias
+// Snap zone detection corner bias (>= 1)
 extern int SNAP_DET_CORNER_BIAS;
-// Snap zone detection threshold
+// Snap zone detection threshold (>= 1)
 extern int SNAP_DET_THRES;
 // Snap indicator background colour
 extern int SNAP_INDI_BAK_COL;
@@ -68,5 +79,9 @@ extern int TITLE_REST_TXT_COL;
 extern int TITLE_SNAP_BAK_COL;
 // Window title bar text colour when snapped
 extern int TITLE_SNAP_TXT_COL;
+
+
+
+void validateConfig(void);
 
 #endif

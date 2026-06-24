@@ -12,16 +12,22 @@
 
 
 
-#ifndef FRAME
-#define FRAME
+#ifndef BUTTON
+#define BUTTON
 
+#include "client.h"
 #include "shorkwm.h"
 
 
 
-void createFrame(Window);
-void deleteFrame(Window);
-void drawTitleBar(Client*);
-int isOverCaptButton(ButtonType, int, int, int);
+typedef enum {
+    BTN_CAPT_CLOSE,
+    BTN_CAPT_MAX
+} ButtonType;
 
-#endif
+
+
+void drawButton(ButtonType, Client*, GC, int, int);
+void drawCaptButton(ButtonType, Client*, GC, int, int);
+
+#endif 
